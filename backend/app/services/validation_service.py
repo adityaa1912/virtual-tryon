@@ -34,9 +34,16 @@ class ImageValidator:
 
     async def validate(self, file: UploadFile) -> ValidatedImage:
         content = await self._read_within_limit(file)
+        return self.validate_bytes(content, file.filename)
 
+    def validate_bytes(
+        self, content: bytes, original_filename: str | None = None
+    ) -> ValidatedImage:
         if not content:
             raise EmptyFileError()
+
+        if len(content) > self._policy.max_size_bytes:
+            raise FileTooLargeError(self._policy.max_size_bytes)
 
         content_type = sniff_mime_type(content)
         if content_type is None or content_type not in self._policy.allowed_mime_types:
@@ -60,7 +67,7 @@ class ImageValidator:
             width=width,
             height=height,
             sha256=compute_sha256(content),
-            original_filename=file.filename,
+            original_filename=original_filename,
         )
 
     async def _read_within_limit(self, file: UploadFile) -> bytes:

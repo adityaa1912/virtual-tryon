@@ -79,3 +79,15 @@ def test_rejects_oversized_dimensions():
 def test_rejects_decompression_bomb():
     with pytest.raises(DecompressionBombError):
         validate(make_policy(max_pixels=1000), png_bytes(256, 256))
+
+
+def test_validate_bytes_accepts_valid_png_without_filename():
+    result = ImageValidator(make_policy()).validate_bytes(png_bytes(48, 48))
+    assert result.content_type == "image/png"
+    assert result.width == 48 and result.height == 48
+    assert result.original_filename is None
+
+
+def test_validate_bytes_rejects_spoofed_type():
+    with pytest.raises(UnsupportedMediaTypeError):
+        ImageValidator(make_policy()).validate_bytes(b"still not an image")

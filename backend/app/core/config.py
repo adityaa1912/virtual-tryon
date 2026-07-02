@@ -21,6 +21,17 @@ class Settings(BaseSettings):
 
     storage_dir: str = "storage"
 
+    gemini_provider: str = "fake"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash-image"
+    gemini_temperature: float = 0.2
+    gemini_top_p: float = 0.95
+    gemini_candidate_count: int = 1
+    gemini_response_modalities: str = "IMAGE"
+    gemini_safety_threshold: str = "BLOCK_ONLY_HIGH"
+    gemini_timeout_seconds: float = 60.0
+    gemini_max_retries: int = 3
+
     @property
     def allowed_image_mime_type_set(self) -> frozenset[str]:
         return frozenset(

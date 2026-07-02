@@ -4,7 +4,12 @@ from pathlib import Path
 from fastapi import Depends, File, UploadFile
 
 from app.core.config import Settings, get_settings
+from app.models.gemini import GenerationConfig
 from app.models.upload import ValidatedImage
+from app.services.gemini_google import GoogleGeminiProvider
+from app.services.gemini_provider import FakeGeminiProvider, GeminiProvider
+from app.services.gemini_service import GeminiService
+from app.services.prompt_builder import PromptBuilder
 from app.services.storage_service import LocalStorageProvider, StorageProvider
 from app.services.validation_service import ImageValidationPolicy, ImageValidator
 
@@ -34,3 +39,51 @@ def _build_storage_provider(root: str) -> StorageProvider:
 
 def get_storage_provider(settings: Settings = Depends(get_settings)) -> StorageProvider:
     return _build_storage_provider(settings.storage_dir)
+
+
+def get_generation_config(
+    settings: Settings = Depends(get_settings),
+) -> GenerationConfig:
+    modalities = tuple(
+        item.strip()
+        for item in settings.gemini_response_modalities.split(",")
+        if item.strip()
+    )
+    return GenerationConfig(
+        model=settings.gemini_model,
+        temperature=settings.gemini_temperature,
+        top_p=settings.gemini_top_p,
+        candidate_count=settings.gemini_candidate_count,
+        response_modalities=modalities,
+        safety_threshold=settings.gemini_safety_threshold,
+        timeout_seconds=settings.gemini_timeout_seconds,
+        max_retries=settings.gemini_max_retries,
+    )
+
+
+def get_prompt_builder() -> PromptBuilder:
+    return PromptBuilder()
+
+
+def get_gemini_provider(settings: Settings = Depends(get_settings)) -> GeminiProvider:
+    if settings.gemini_provider == "google":
+        if not settings.gemini_api_key:
+            raise RuntimeError(
+                "GEMINI_API_KEY is required when GEMINI_PROVIDER is 'google'."
+            )
+        return GoogleGeminiProvider(settings.gemini_api_key)
+    return FakeGeminiProvider()
+
+
+def get_gemini_service(
+    provider: GeminiProvider = Depends(get_gemini_provider),
+    prompt_builder: PromptBuilder = Depends(get_prompt_builder),
+    generation_config: GenerationConfig = Depends(get_generation_config),
+    output_validator: ImageValidator = Depends(get_image_validator),
+) -> GeminiService:
+    return GeminiService(
+        provider=provider,
+        prompt_builder=prompt_builder,
+        generation_config=generation_config,
+        output_validator=output_validator,
+    )

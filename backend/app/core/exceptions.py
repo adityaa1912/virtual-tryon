@@ -90,3 +90,49 @@ class InvalidStorageKeyError(StorageError):
 
     def __init__(self, key: str) -> None:
         super().__init__(f"Invalid storage key: {key}.")
+
+
+class GeminiError(Exception):
+    status_code: int = 502
+    code: str = "UPSTREAM_ERROR"
+    default_detail: str = "The image generation service failed."
+
+    def __init__(self, detail: str | None = None) -> None:
+        self.detail = detail or self.default_detail
+        super().__init__(self.detail)
+
+
+class GeminiServerError(GeminiError):
+    status_code = 502
+    code = "UPSTREAM_ERROR"
+    default_detail = "The image generation service returned a server error."
+
+
+class GeminiTimeoutError(GeminiError):
+    status_code = 504
+    code = "UPSTREAM_TIMEOUT"
+    default_detail = "The image generation service timed out."
+
+
+class GeminiRateLimitError(GeminiError):
+    status_code = 429
+    code = "RATE_LIMITED"
+    default_detail = "The image generation service is rate limited."
+
+
+class GeminiSafetyRefusalError(GeminiError):
+    status_code = 422
+    code = "SAFETY_REFUSED"
+    default_detail = "The request was refused by the image generation safety filters."
+
+
+class GeminiEmptyResponseError(GeminiError):
+    status_code = 502
+    code = "EMPTY_GENERATION"
+    default_detail = "The image generation service returned no image."
+
+
+class GeminiInvalidOutputError(GeminiError):
+    status_code = 502
+    code = "INVALID_GENERATION"
+    default_detail = "The image generation service returned an invalid image."
