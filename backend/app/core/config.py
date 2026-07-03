@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     gemini_timeout_seconds: float = 60.0
     gemini_max_retries: int = 3
 
+    preprocess_max_dimension: int = 1536
+
+    video_provider: str = "fake"
+    video_api_key: str | None = None
+    video_timeout_seconds: float = 120.0
+
     @property
     def allowed_image_mime_type_set(self) -> frozenset[str]:
         return frozenset(

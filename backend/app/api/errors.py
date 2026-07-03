@@ -4,8 +4,24 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from app.api.middleware import REQUEST_ID_HEADER
-from app.core.exceptions import StorageError, UploadValidationError
+from app.core.exceptions import (
+    GeminiError,
+    ResultNotFoundError,
+    StorageError,
+    UploadNotFoundError,
+    UploadValidationError,
+    VideoError,
+)
 from app.schemas.common import ErrorDetail, ErrorModel, ErrorResponse
+
+_DOMAIN_EXCEPTIONS = (
+    UploadValidationError,
+    StorageError,
+    UploadNotFoundError,
+    GeminiError,
+    VideoError,
+    ResultNotFoundError,
+)
 
 
 def _request_id(request: Request) -> str:
@@ -35,19 +51,13 @@ def _error_response(
 
 
 def register_exception_handlers(app: FastAPI) -> None:
-    @app.exception_handler(UploadValidationError)
-    async def _on_upload_validation_error(
-        request: Request, exc: UploadValidationError
-    ) -> JSONResponse:
+    async def _on_domain_error(request: Request, exc) -> JSONResponse:
         return _error_response(
             exc.status_code, exc.code, exc.detail, _request_id(request)
         )
 
-    @app.exception_handler(StorageError)
-    async def _on_storage_error(request: Request, exc: StorageError) -> JSONResponse:
-        return _error_response(
-            exc.status_code, exc.code, exc.detail, _request_id(request)
-        )
+    for domain_exception in _DOMAIN_EXCEPTIONS:
+        app.add_exception_handler(domain_exception, _on_domain_error)
 
     @app.exception_handler(RequestValidationError)
     async def _on_request_validation_error(

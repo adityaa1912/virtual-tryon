@@ -92,6 +92,15 @@ class InvalidStorageKeyError(StorageError):
         super().__init__(f"Invalid storage key: {key}.")
 
 
+class UploadNotFoundError(Exception):
+    status_code: int = 404
+    code: str = "NOT_FOUND"
+
+    def __init__(self, upload_id: str) -> None:
+        self.detail = f"Upload not found: {upload_id}."
+        super().__init__(self.detail)
+
+
 class GeminiError(Exception):
     status_code: int = 502
     code: str = "UPSTREAM_ERROR"
@@ -136,3 +145,34 @@ class GeminiInvalidOutputError(GeminiError):
     status_code = 502
     code = "INVALID_GENERATION"
     default_detail = "The image generation service returned an invalid image."
+
+
+class VideoError(Exception):
+    status_code: int = 502
+    code: str = "VIDEO_UPSTREAM_ERROR"
+    default_detail: str = "The video generation service failed."
+
+    def __init__(self, detail: str | None = None) -> None:
+        self.detail = detail or self.default_detail
+        super().__init__(self.detail)
+
+
+class VideoRateLimitError(VideoError):
+    status_code = 429
+    code = "VIDEO_RATE_LIMITED"
+    default_detail = "The video generation service is rate limited."
+
+
+class VideoTimeoutError(VideoError):
+    status_code = 504
+    code = "VIDEO_UPSTREAM_TIMEOUT"
+    default_detail = "The video generation service timed out."
+
+
+class ResultNotFoundError(Exception):
+    status_code: int = 404
+    code: str = "NOT_FOUND"
+
+    def __init__(self, result_id: str) -> None:
+        self.detail = f"Result not found: {result_id}."
+        super().__init__(self.detail)

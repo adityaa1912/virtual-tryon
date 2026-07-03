@@ -61,3 +61,21 @@ def test_delete(provider):
     assert provider.exists(stored.key) is False
     with pytest.raises(StorageObjectNotFoundError):
         provider.read(stored.key)
+
+
+def test_find_locates_object_by_id(provider):
+    stored = provider.save(png_bytes(), ".png", StorageCategory.UPLOAD)
+    found = provider.find(stored.object_id, StorageCategory.UPLOAD)
+    assert found is not None
+    assert found.object_id == stored.object_id
+    assert found.key == stored.key
+    assert provider.read(found.key) == provider.read(stored.key)
+
+
+def test_find_returns_none_for_absent_id(provider):
+    assert provider.find("0" * 32, StorageCategory.UPLOAD) is None
+
+
+def test_find_rejects_malformed_id(provider):
+    with pytest.raises(InvalidStorageKeyError):
+        provider.find("../../../etc/passwd", StorageCategory.UPLOAD)

@@ -81,12 +81,23 @@ class GoogleGeminiProvider(GeminiProvider):
         attempt = 0
         while True:
             try:
+                print("=" * 80)
+                print("MODEL SENT TO GOOGLE:", config.model)
+                print("=" * 80)
+
                 return await anyio.to_thread.run_sync(
                     lambda: self._client_instance().models.generate_content(
                         model=config.model, contents=contents, config=sdk_config
                     )
                 )
             except Exception as exc:
+                import traceback
+                print("=" * 80)
+                print("Exception type:", type(exc))
+                print("Exception:", exc)
+                traceback.print_exc()
+                print("=" * 80)
+
                 mapped = self._map_error(exc)
                 attempt += 1
                 if attempt > config.max_retries or not _is_retryable(mapped):

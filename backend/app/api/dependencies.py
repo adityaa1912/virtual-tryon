@@ -9,9 +9,13 @@ from app.models.upload import ValidatedImage
 from app.services.gemini_google import GoogleGeminiProvider
 from app.services.gemini_provider import FakeGeminiProvider, GeminiProvider
 from app.services.gemini_service import GeminiService
+from app.services.image_preprocessor import ImagePreprocessor
 from app.services.prompt_builder import PromptBuilder
 from app.services.storage_service import LocalStorageProvider, StorageProvider
+from app.services.tryon_service import TryOnService
 from app.services.validation_service import ImageValidationPolicy, ImageValidator
+from app.services.video_provider import FakeVideoProvider, VideoProvider
+from app.services.video_service import VideoService
 
 
 def get_image_validator(settings: Settings = Depends(get_settings)) -> ImageValidator:
@@ -49,6 +53,7 @@ def get_generation_config(
         for item in settings.gemini_response_modalities.split(",")
         if item.strip()
     )
+    print("MODEL FROM SETTINGS:", settings.gemini_model)
     return GenerationConfig(
         model=settings.gemini_model,
         temperature=settings.gemini_temperature,
@@ -67,6 +72,9 @@ def get_prompt_builder() -> PromptBuilder:
 
 def get_gemini_provider(settings: Settings = Depends(get_settings)) -> GeminiProvider:
     if settings.gemini_provider == "google":
+        print("Provider:", settings.gemini_provider)
+        print("API Key loaded:", bool(settings.gemini_api_key))
+        print("Using GoogleGeminiProvider")
         if not settings.gemini_api_key:
             raise RuntimeError(
                 "GEMINI_API_KEY is required when GEMINI_PROVIDER is 'google'."
@@ -87,3 +95,32 @@ def get_gemini_service(
         generation_config=generation_config,
         output_validator=output_validator,
     )
+
+
+def get_image_preprocessor(
+    settings: Settings = Depends(get_settings),
+) -> ImagePreprocessor:
+    return ImagePreprocessor(settings.preprocess_max_dimension)
+
+
+def get_tryon_service(
+    storage: StorageProvider = Depends(get_storage_provider),
+    preprocessor: ImagePreprocessor = Depends(get_image_preprocessor),
+    gemini_service: GeminiService = Depends(get_gemini_service),
+) -> TryOnService:
+    return TryOnService(
+        storage=storage,
+        preprocessor=preprocessor,
+        gemini_service=gemini_service,
+    )
+
+
+def get_video_provider() -> VideoProvider:
+    return FakeVideoProvider()
+
+
+def get_video_service(
+    storage: StorageProvider = Depends(get_storage_provider),
+    provider: VideoProvider = Depends(get_video_provider),
+) -> VideoService:
+    return VideoService(storage=storage, provider=provider)

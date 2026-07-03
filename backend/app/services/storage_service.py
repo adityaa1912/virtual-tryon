@@ -1,4 +1,5 @@
 import os
+import re
 import tempfile
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -18,6 +19,7 @@ _SUBDIR_BY_CATEGORY: dict[StorageCategory, Path] = {
     StorageCategory.OUTPUT_VIDEO: Path("outputs/videos"),
 }
 _TMP_SUBDIR = Path("tmp")
+_OBJECT_ID_PATTERN = re.compile(r"\A[0-9a-f]{32}\Z")
 
 
 class StorageProvider(ABC):
@@ -34,6 +36,11 @@ class StorageProvider(ABC):
 
     @abstractmethod
     def delete(self, key: str) -> None: ...
+
+    @abstractmethod
+    def find(
+        self, object_id: str, category: StorageCategory
+    ) -> StoredObject | None: ...
 
 
 class LocalStorageProvider(StorageProvider):
@@ -75,6 +82,23 @@ class LocalStorageProvider(StorageProvider):
             path.unlink()
         except FileNotFoundError as exc:
             raise StorageObjectNotFoundError(key) from exc
+
+    def find(
+        self, object_id: str, category: StorageCategory
+    ) -> StoredObject | None:
+        if not _OBJECT_ID_PATTERN.match(object_id):
+            raise InvalidStorageKeyError(object_id)
+        subdir = _SUBDIR_BY_CATEGORY[category]
+        for match in sorted((self._root / subdir).glob(f"{object_id}.*")):
+            if match.is_file():
+                return StoredObject(
+                    object_id=object_id,
+                    key=(subdir / match.name).as_posix(),
+                    filename=match.name,
+                    category=category,
+                    size_bytes=match.stat().st_size,
+                )
+        return None
 
     def _ensure_layout(self) -> None:
         self._tmp_dir.mkdir(parents=True, exist_ok=True)
