@@ -22,7 +22,10 @@ class Settings(BaseSettings):
     storage_dir: str = "storage"
 
     gemini_provider: str = "fake"
+    gemini_use_vertex: bool = False
     gemini_api_key: str | None = None
+    gemini_project_id: str | None = None
+    gemini_location: str = "us-central1"
     gemini_model: str = "gemini-2.5-flash-image"
     gemini_temperature: float = 0.2
     gemini_top_p: float = 0.95
@@ -35,8 +38,11 @@ class Settings(BaseSettings):
     preprocess_max_dimension: int = 1536
 
     video_provider: str = "fake"
-    video_api_key: str | None = None
-    video_timeout_seconds: float = 120.0
+    kling_api_key: str | None = None
+    kling_base_url: str = "https://api-singapore.klingai.com"
+    kling_model: str = "kling-v1"
+    kling_poll_interval_seconds: float = 5.0
+    kling_poll_timeout_seconds: float = 300.0
 
     @property
     def allowed_image_mime_type_set(self) -> frozenset[str]:

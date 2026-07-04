@@ -32,8 +32,18 @@ def _backoff_delay(attempt: int) -> float:
 
 
 class GoogleGeminiProvider(GeminiProvider):
-    def __init__(self, api_key: str) -> None:
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        use_vertex: bool = False,
+        project_id: str | None = None,
+        location: str | None = None,
+    ) -> None:
         self._api_key = api_key
+        self._use_vertex = use_vertex
+        self._project_id = project_id
+        self._location = location
         self._client = None
 
     async def generate(self, request: GeminiRequest) -> GeneratedImage:
@@ -46,7 +56,14 @@ class GoogleGeminiProvider(GeminiProvider):
         if self._client is None:
             from google import genai
 
-            self._client = genai.Client(api_key=self._api_key)
+            if self._use_vertex:
+                self._client = genai.Client(
+                    vertexai=True,
+                    project=self._project_id,
+                    location=self._location,
+                )
+            else:
+                self._client = genai.Client(api_key=self._api_key)
         return self._client
 
     def _build_contents(self, request: GeminiRequest) -> list:

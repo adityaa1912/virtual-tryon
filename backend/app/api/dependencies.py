@@ -14,6 +14,7 @@ from app.services.prompt_builder import PromptBuilder
 from app.services.storage_service import LocalStorageProvider, StorageProvider
 from app.services.tryon_service import TryOnService
 from app.services.validation_service import ImageValidationPolicy, ImageValidator
+from app.services.video_kling import KlingVideoProvider
 from app.services.video_provider import FakeVideoProvider, VideoProvider
 from app.services.video_service import VideoService
 
@@ -71,16 +72,23 @@ def get_prompt_builder() -> PromptBuilder:
 
 
 def get_gemini_provider(settings: Settings = Depends(get_settings)) -> GeminiProvider:
-    if settings.gemini_provider == "google":
-        print("Provider:", settings.gemini_provider)
-        print("API Key loaded:", bool(settings.gemini_api_key))
-        print("Using GoogleGeminiProvider")
-        if not settings.gemini_api_key:
+    if settings.gemini_provider != "google":
+        return FakeGeminiProvider()
+    if settings.gemini_use_vertex:
+        if not settings.gemini_project_id:
             raise RuntimeError(
-                "GEMINI_API_KEY is required when GEMINI_PROVIDER is 'google'."
+                "GEMINI_PROJECT_ID is required when GEMINI_USE_VERTEX is true."
             )
-        return GoogleGeminiProvider(settings.gemini_api_key)
-    return FakeGeminiProvider()
+        return GoogleGeminiProvider(
+            use_vertex=True,
+            project_id=settings.gemini_project_id,
+            location=settings.gemini_location,
+        )
+    if not settings.gemini_api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY is required when GEMINI_PROVIDER is 'google'."
+        )
+    return GoogleGeminiProvider(api_key=settings.gemini_api_key)
 
 
 def get_gemini_service(
@@ -115,7 +123,19 @@ def get_tryon_service(
     )
 
 
-def get_video_provider() -> VideoProvider:
+def get_video_provider(settings: Settings = Depends(get_settings)) -> VideoProvider:
+    if settings.video_provider == "kling":
+        if not settings.kling_api_key:
+            raise RuntimeError(
+                "KLING_API_KEY is required when VIDEO_PROVIDER is 'kling'."
+            )
+        return KlingVideoProvider(
+            api_key=settings.kling_api_key,
+            base_url=settings.kling_base_url,
+            model=settings.kling_model,
+            poll_interval_seconds=settings.kling_poll_interval_seconds,
+            poll_timeout_seconds=settings.kling_poll_timeout_seconds,
+        )
     return FakeVideoProvider()
 
 
