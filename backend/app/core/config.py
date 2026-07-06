@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_project_id: str | None = None
     gemini_location: str = "us-central1"
-    gemini_model: str = "gemini-2.5-flash-image"
+    gemini_model: str = "models/nano-banana-pro-preview"
     gemini_temperature: float = 0.2
     gemini_top_p: float = 0.95
     gemini_candidate_count: int = 1
@@ -38,24 +38,10 @@ class Settings(BaseSettings):
     preprocess_max_dimension: int = 1536
 
     video_provider: str = "fake"
-    kling_api_key: str | None = None
-    kling_base_url: str = "https://api-singapore.klingai.com"
-    kling_model: str = "kling-v1"
-    kling_poll_interval_seconds: float = 5.0
-    kling_poll_timeout_seconds: float = 300.0
-
-    pollinations_api_key: str | None = None
-    pollinations_base_url: str = "https://gen.pollinations.ai"
-    pollinations_media_url: str = "https://media.pollinations.ai"
-    pollinations_video_model: str = "wan"
-    pollinations_duration: int = 5
-    pollinations_aspect_ratio: str = "1:1"
-    pollinations_timeout_seconds: float = 180.0
 
     veo_model: str = "models/veo-3.1-fast-generate-preview"
     veo_prompt: str = (
-        "The person naturally wears the jewellery. The camera stays still while "
-        "the subject gently turns their head and smiles, showcasing the jewellery."
+        "The person gently turns their head and smiles naturally while keeping the jewellery clearly visible. The camera remains steady. Maintain identity, lighting and jewellery appearance."
     )
     veo_timeout_seconds: float = 300.0
     veo_poll_interval_seconds: float = 10.0

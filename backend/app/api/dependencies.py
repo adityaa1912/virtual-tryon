@@ -14,8 +14,6 @@ from app.services.prompt_builder import PromptBuilder
 from app.services.storage_service import LocalStorageProvider, StorageProvider
 from app.services.tryon_service import TryOnService
 from app.services.validation_service import ImageValidationPolicy, ImageValidator
-from app.services.video_kling import KlingVideoProvider
-from app.services.video_pollinations import PollinationsVideoProvider
 from app.services.video_provider import FakeVideoProvider, VideoProvider
 from app.services.video_veo import VeoVideoProvider
 from app.services.video_service import VideoService
@@ -125,21 +123,6 @@ def get_tryon_service(
 
 
 def get_video_provider(settings: Settings = Depends(get_settings)) -> VideoProvider:
-    if settings.video_provider == "pollinations":
-        if not settings.pollinations_api_key:
-            raise RuntimeError(
-                "POLLINATIONS_API_KEY is required when VIDEO_PROVIDER is "
-                "'pollinations'."
-            )
-        return PollinationsVideoProvider(
-            api_key=settings.pollinations_api_key,
-            base_url=settings.pollinations_base_url,
-            media_url=settings.pollinations_media_url,
-            model=settings.pollinations_video_model,
-            duration=settings.pollinations_duration,
-            aspect_ratio=settings.pollinations_aspect_ratio,
-            timeout_seconds=settings.pollinations_timeout_seconds,
-        )
     if settings.video_provider == "veo":
         if not settings.gemini_api_key:
             raise RuntimeError(
@@ -151,18 +134,6 @@ def get_video_provider(settings: Settings = Depends(get_settings)) -> VideoProvi
             prompt=settings.veo_prompt,
             timeout_seconds=settings.veo_timeout_seconds,
             poll_interval_seconds=settings.veo_poll_interval_seconds,
-        )
-    if settings.video_provider == "kling":
-        if not settings.kling_api_key:
-            raise RuntimeError(
-                "KLING_API_KEY is required when VIDEO_PROVIDER is 'kling'."
-            )
-        return KlingVideoProvider(
-            api_key=settings.kling_api_key,
-            base_url=settings.kling_base_url,
-            model=settings.kling_model,
-            poll_interval_seconds=settings.kling_poll_interval_seconds,
-            poll_timeout_seconds=settings.kling_poll_timeout_seconds,
         )
     return FakeVideoProvider()
 
