@@ -2,6 +2,7 @@ from pathlib import Path
 
 from app.api.dependencies import get_gemini_provider
 from app.core.exceptions import GeminiSafetyRefusalError
+from app.prompts.tryon import TRYON_PROMPT_VERSION
 from app.services.gemini_provider import FakeGeminiProvider
 from tests.factories import png_bytes
 
@@ -33,7 +34,7 @@ def test_tryon_success(client, storage_root: Path):
     body = response.json()
     assert set(body) == {"data", "meta"}
     data = body["data"]
-    assert data["prompt_version"] == "tryon-v1"
+    assert data["prompt_version"] == TRYON_PROMPT_VERSION
     assert data["content_type"] == "image/png"
     assert data["width"] == 96 and data["height"] == 96
     assert "." not in data["result_id"] and "/" not in data["result_id"]

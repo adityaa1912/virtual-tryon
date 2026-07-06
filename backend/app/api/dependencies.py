@@ -15,7 +15,9 @@ from app.services.storage_service import LocalStorageProvider, StorageProvider
 from app.services.tryon_service import TryOnService
 from app.services.validation_service import ImageValidationPolicy, ImageValidator
 from app.services.video_kling import KlingVideoProvider
+from app.services.video_pollinations import PollinationsVideoProvider
 from app.services.video_provider import FakeVideoProvider, VideoProvider
+from app.services.video_veo import VeoVideoProvider
 from app.services.video_service import VideoService
 
 
@@ -54,7 +56,6 @@ def get_generation_config(
         for item in settings.gemini_response_modalities.split(",")
         if item.strip()
     )
-    print("MODEL FROM SETTINGS:", settings.gemini_model)
     return GenerationConfig(
         model=settings.gemini_model,
         temperature=settings.gemini_temperature,
@@ -124,6 +125,33 @@ def get_tryon_service(
 
 
 def get_video_provider(settings: Settings = Depends(get_settings)) -> VideoProvider:
+    if settings.video_provider == "pollinations":
+        if not settings.pollinations_api_key:
+            raise RuntimeError(
+                "POLLINATIONS_API_KEY is required when VIDEO_PROVIDER is "
+                "'pollinations'."
+            )
+        return PollinationsVideoProvider(
+            api_key=settings.pollinations_api_key,
+            base_url=settings.pollinations_base_url,
+            media_url=settings.pollinations_media_url,
+            model=settings.pollinations_video_model,
+            duration=settings.pollinations_duration,
+            aspect_ratio=settings.pollinations_aspect_ratio,
+            timeout_seconds=settings.pollinations_timeout_seconds,
+        )
+    if settings.video_provider == "veo":
+        if not settings.gemini_api_key:
+            raise RuntimeError(
+                "GEMINI_API_KEY is required when VIDEO_PROVIDER is 'veo'."
+            )
+        return VeoVideoProvider(
+            api_key=settings.gemini_api_key,
+            model=settings.veo_model,
+            prompt=settings.veo_prompt,
+            timeout_seconds=settings.veo_timeout_seconds,
+            poll_interval_seconds=settings.veo_poll_interval_seconds,
+        )
     if settings.video_provider == "kling":
         if not settings.kling_api_key:
             raise RuntimeError(

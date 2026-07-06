@@ -39,23 +39,21 @@ class KlingVideoProvider(VideoProvider):
             "mode": "std",
             "duration": "5",
         }
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=30.0) as client:
-            task_id = await self._submit(client, headers, payload)
-            video_url = await self._poll(client, headers, task_id)
-            content = await self._download(client, video_url)
+        try:
+            async with httpx.AsyncClient(
+                base_url=self._base_url, timeout=30.0
+            ) as client:
+                task_id = await self._submit(client, headers, payload)
+                video_url = await self._poll(client, headers, task_id)
+                content = await self._download(client, video_url)
+        except httpx.TimeoutException as exc:
+            raise VideoTimeoutError() from exc
+        except httpx.HTTPError as exc:
+            raise VideoError("Kling request failed.") from exc
         return GeneratedVideo(content=content, content_type="video/mp4")
 
     async def _submit(self, client, headers: dict, payload: dict) -> str:
         response = await client.post(_IMAGE2VIDEO_PATH, headers=headers, json=payload)
-        print("=" * 80)
-        print("STATUS:", response.status_code)
-        print("URL:", response.request.url)
-        print("REQUEST:")
-        print(payload)
-        print("response:")
-        print("RESPONSE:", response.text)
-        print("=" * 80)
-        
         self._raise_for_status(response)
         task_id = response.json().get("data", {}).get("task_id")
         if not task_id:
@@ -74,12 +72,8 @@ class KlingVideoProvider(VideoProvider):
             if status == "succeed":
                 return self._extract_video_url(data)
             if status == "failed":
-                print("=" * 80)
-                print("STATUS:", response.status_code)
-                print("RESPONSE:", response.text)
-                print("=" * 80)
                 raise VideoError(
-                   f"Kling {response.status_code}: {response.text}"
+                    data.get("task_status_msg") or "Kling video generation failed."
                 )
             if time.monotonic() >= deadline:
                 raise VideoTimeoutError()

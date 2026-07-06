@@ -52,18 +52,23 @@ class GoogleGeminiProvider(GeminiProvider):
         response = await self._call_with_retry(request.config, contents, sdk_config)
         return self._extract_image(response)
 
-    def _client_instance(self):
+    def _client_instance(self, timeout_seconds: float):
         if self._client is None:
             from google import genai
+            from google.genai import types
 
+            http_options = types.HttpOptions(timeout=int(timeout_seconds * 1000))
             if self._use_vertex:
                 self._client = genai.Client(
                     vertexai=True,
                     project=self._project_id,
                     location=self._location,
+                    http_options=http_options,
                 )
             else:
-                self._client = genai.Client(api_key=self._api_key)
+                self._client = genai.Client(
+                    api_key=self._api_key, http_options=http_options
+                )
         return self._client
 
     def _build_contents(self, request: GeminiRequest) -> list:
@@ -98,23 +103,14 @@ class GoogleGeminiProvider(GeminiProvider):
         attempt = 0
         while True:
             try:
-                print("=" * 80)
-                print("MODEL SENT TO GOOGLE:", config.model)
-                print("=" * 80)
-
                 return await anyio.to_thread.run_sync(
-                    lambda: self._client_instance().models.generate_content(
+                    lambda: self._client_instance(
+                        config.timeout_seconds
+                    ).models.generate_content(
                         model=config.model, contents=contents, config=sdk_config
                     )
                 )
             except Exception as exc:
-                import traceback
-                print("=" * 80)
-                print("Exception type:", type(exc))
-                print("Exception:", exc)
-                traceback.print_exc()
-                print("=" * 80)
-
                 mapped = self._map_error(exc)
                 attempt += 1
                 if attempt > config.max_retries or not _is_retryable(mapped):

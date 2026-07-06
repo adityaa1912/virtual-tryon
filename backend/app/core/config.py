@@ -44,6 +44,22 @@ class Settings(BaseSettings):
     kling_poll_interval_seconds: float = 5.0
     kling_poll_timeout_seconds: float = 300.0
 
+    pollinations_api_key: str | None = None
+    pollinations_base_url: str = "https://gen.pollinations.ai"
+    pollinations_media_url: str = "https://media.pollinations.ai"
+    pollinations_video_model: str = "wan"
+    pollinations_duration: int = 5
+    pollinations_aspect_ratio: str = "1:1"
+    pollinations_timeout_seconds: float = 180.0
+
+    veo_model: str = "models/veo-3.1-fast-generate-preview"
+    veo_prompt: str = (
+        "The person naturally wears the jewellery. The camera stays still while "
+        "the subject gently turns their head and smiles, showcasing the jewellery."
+    )
+    veo_timeout_seconds: float = 300.0
+    veo_poll_interval_seconds: float = 10.0
+
     @property
     def allowed_image_mime_type_set(self) -> frozenset[str]:
         return frozenset(

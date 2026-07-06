@@ -9,10 +9,16 @@ export interface CatalogueItem {
 
 export const CATALOGUE: CatalogueItem[] = [
   {
-    id: "gold-necklace",
-    name: "Gold Necklace",
+    id: "gold-heart-necklace",
+    name: "Gold Heart Necklace",
     category: "necklace",
-    imageUrl: "/jewellery/gold-necklace.png",
+    imageUrl: "/jewellery/gold-heart-necklace.png",
+  },
+  {
+    id: "diamond-pendant-necklace",
+    name: "Diamond Pendant Necklace",
+    category: "necklace",
+    imageUrl: "/jewellery/diamond-pendant-necklace.png",
   },
   {
     id: "pearl-earrings",
@@ -37,11 +43,5 @@ export const CATALOGUE: CatalogueItem[] = [
     name: "Classic Watch",
     category: "watch",
     imageUrl: "/jewellery/classic-watch.png",
-  },
-  {
-    id: "round-glasses",
-    name: "Round Glasses",
-    category: "glasses",
-    imageUrl: "/jewellery/round-glasses.png",
   },
 ];
