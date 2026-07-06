@@ -1,259 +1,565 @@
 # AI Virtual Jewellery Try-On
 
-A full-stack application that lets a user upload a photo, choose a piece of
-jewellery (from a built-in catalogue or their own upload), and generate a
-photorealistic try-on image with Google Gemini. The generated image can then be
-animated into a short preview video with Kling.
+A full-stack AI application that allows users to virtually try jewellery before purchasing it. Users can upload a face or hand image, select a jewellery item from the catalogue (or upload their own), and generate a realistic try-on image using Google's Gemini image generation model. The generated image can also be converted into a short video using Google Veo.
 
-The codebase is built around clean architecture: typed configuration, provider
-abstractions with swappable real/fake implementations, dependency injection, a
-storage abstraction, and a consistent response/error envelope.
+This project was developed as part of the **Backend Intern Assignment** for **Sixth Dimension Labs**.
 
 ---
 
-## Overview
+## Demo
+
+
+# Project Overview
+
+The application follows a simple workflow.
+
+1. Upload a face image or a hand image.
+2. Choose a jewellery item from the built-in catalogue or upload your own jewellery image.
+3. The backend validates both images.
+4. Google Gemini (Nano Banana Pro) generates a realistic try-on image.
+5. The generated image is stored locally.
+6. Google Veo generates a short animation from the generated image.
+7. The frontend displays both the final image and the generated video.
+
+The project was designed to keep the backend modular so that AI providers can be replaced without changing the API or frontend.
+
+---
+
+# Features
+
+### Image Upload
+
+- Upload face images for:
+  - Necklaces
+  - Earrings
+
+- Upload hand images for:
+  - Rings
+  - Bracelets
+  - Watches
+
+- Upload custom jewellery images.
+
+---
+
+### Jewellery Catalogue
+
+The application includes a small jewellery catalogue containing multiple sample products.
+
+Current catalogue includes:
+
+- Diamond Ring
+- Gold Necklace
+- Pearl Earrings
+- Silver Bracelet
+- Classic Watch
+- Diamond Pendant
+
+---
+
+### AI Image Generation
+
+Uses **Google Gemini Nano Banana Pro** to:
+
+- Preserve facial identity
+- Preserve hand structure
+- Preserve lighting
+- Preserve skin tone
+- Keep jewellery design unchanged
+- Blend jewellery naturally with the uploaded image
+
+---
+
+### AI Video Generation
+
+Uses **Google Veo** to generate a short animation from the final try-on image.
+
+The generated video is stored locally and displayed directly in the frontend.
+
+---
+
+### Validation
+
+Before any AI request is sent:
+
+- Image format is validated.
+- File size is checked.
+- Image dimensions are verified.
+- Invalid or corrupted images are rejected.
+
+---
+
+### Local Storage
+
+Everything is stored locally.
+
+This includes:
+
+- Uploaded images
+- Generated try-on images
+- Generated videos
+
+No cloud storage is required.
+
+---
+
+# Tech Stack
+
+## Backend
+
+- Python
+- FastAPI
+- Pydantic
+- Google GenAI SDK
+- Pillow
+- AnyIO
+- HTTPX
+
+## Frontend
+
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Axios
+
+## AI Models
+
+### Image Generation
+
+Google Gemini
+
+Model used:
 
 ```
-Upload face / hand photo
-        +
-Catalogue item or uploaded jewellery
-        ↓
-POST /api/v1/uploads    validate + store both images
-        ↓
-POST /api/v1/try-on     Gemini edits the photo to wear the jewellery
-        ↓
-Result image shown + downloadable
-        ↓
-POST /api/v1/videos     (optional) Kling animates the image into a short clip
-        ↓
-Result video shown + downloadable
-```
 
-The frontend automatically routes the correct photo to Gemini based on the
-selected category: the **face** photo for necklaces, earrings, and glasses; the
-**hand** photo for rings, bracelets, and watches.
-
-## Features
-
-- Face and hand photo uploads with instant previews.
-- Built-in jewellery catalogue plus custom jewellery upload — both flow through
-  the same upload pipeline.
-- Robust image validation (magic-number sniffing, size, dimensions,
-  decompression-bomb protection).
-- Gemini-powered, category-specific, versioned prompts for identity-preserving
-  try-on.
-- Optional Kling image-to-video generation with server-side polling.
-- Download of both the generated image and video.
-- Consistent JSON response envelope, request-id correlation, and typed errors.
-- Deterministic, offline test suite via fake providers.
-
-## Architecture
-
-Layered, dependency-injected FastAPI backend:
-
-- **Routes** (`app/api/routes`) — thin HTTP handlers; parse request, call a
-  service, shape the envelope response.
-- **Services** (`app/services`) — domain logic: validation, storage,
-  preprocessing, Gemini try-on, Kling video.
-- **Providers** — vendor integrations behind abstractions
-  (`GeminiProvider` → `GoogleGeminiProvider` / `FakeGeminiProvider`;
-  `VideoProvider` → `KlingVideoProvider` / `FakeVideoProvider`;
-  `StorageProvider` → `LocalStorageProvider`). Selected by config via DI, so the
-  app is testable offline and swappable without touching callers.
-- **Models / Schemas** — internal domain dataclasses vs. Pydantic request/response
-  contracts.
-- **Core** — typed `Settings` (env-driven), exception hierarchy, request-id
-  middleware.
-
-The React frontend is a single screen with local state, a shared
-`useImageUpload` hook, and a typed Axios client. A Vite dev proxy forwards
-`/api` and `/health` to the backend, so no CORS configuration is needed in
-development.
-
-## Folder structure
+models/nano-banana-pro-preview
 
 ```
-backend/
-  app/
-    api/
-      routes/       health, uploads, tryon, videos, results
-      dependencies.py   DI providers/factories
-      errors.py         exception handlers → error envelope
-      middleware.py     request-id middleware
-    core/           config (Settings), exceptions
-    models/         internal domain objects (ValidatedImage, StoredObject, ...)
-    schemas/        Pydantic request/response contracts + envelope
-    services/       validation, storage, preprocessing, gemini, video
-    prompts/        versioned try-on prompt fragments
-    utils/          identifiers, image inspection, signatures
-  tests/            pytest suite (deterministic, fake providers)
-  requirements.txt / requirements-dev.txt / .env.example
+
+### Video Generation
+
+Google Veo
+
+Model used:
+
+```
+
+models/veo-3.1-fast-generate-preview
+
+```
+
+---
+
+# Project Structure
+
+```
+
+virtual-tryon/
+
+├── backend/
+│
+├── app/
+│ ├── api/
+│ ├── core/
+│ ├── models/
+│ ├── prompts/
+│ ├── schemas/
+│ ├── services/
+│ └── utils/
+│
+├── storage/
+│ ├── uploads/
+│ ├── outputs/
+│ └── videos/
+│
+├── tests/
+│
+├── requirements.txt
+└── .env.example
+
 frontend/
-  src/
-    api/            typed Axios client + types
-    components/     UploadCard, CatalogueGrid, ResultView, ...
-    hooks/          useImageUpload
-    data/           jewellery catalogue
-  public/jewellery/ catalogue images
+
+├── public/
+│ └── jewellery/
+│
+├── src/
+│ ├── api/
+│ ├── components/
+│ ├── hooks/
+│ ├── data/
+│ └── pages/
+│
+└── package.json
+
+docs/
+README.md
+
 ```
 
-## Tech stack
+---
 
-- **Backend:** Python 3.11+ (developed on 3.14), FastAPI, Pydantic v2 /
-  pydantic-settings, Pillow, google-genai, httpx, anyio.
-- **Frontend:** React 18, Vite, TypeScript (strict), Tailwind CSS, Axios.
-- **AI:** Google Gemini (image generation), Kling (image-to-video).
+# System Architecture
 
-## Installation
+```
 
-Prerequisites: Python 3.11+, Node.js 18+, and (for real generation) a Google
-Gemini API key and a Kling API key.
+                 React Frontend
+                        │
+                        │
+                Upload Images
+                        │
+                        ▼
+              FastAPI Backend API
+                        │
+        ┌───────────────┼───────────────┐
+        │               │               │
+        ▼               ▼               ▼
+ Validation      Prompt Builder    Storage Service
+        │               │
+        └───────────────┼───────────────┘
+                        ▼
+              Gemini Image Provider
+                        │
+                        ▼
+             Generated Try-On Image
+                        │
+                        ▼
+                Google Veo Provider
+                        │
+                        ▼
+               Generated Video (MP4)
+                        │
+                        ▼
+                  Frontend Display
 
-### Backend setup
+```
+
+---
+
+# Why this architecture?
+
+Instead of placing all AI logic inside the API routes, the project separates each responsibility into independent services.
+
+This makes it easier to:
+
+- replace AI providers
+- test the application without calling external APIs
+- maintain the codebase
+- add new providers in the future
+
+The frontend never communicates directly with Gemini or Veo. Every request goes through the backend, which handles validation, prompt generation, storage and error handling.
+
+---
+# Installation
+
+## Prerequisites
+
+Before running the project, make sure the following are installed:
+
+- Python 3.11 or later
+- Node.js 18 or later
+- npm
+- Git
+
+You will also need:
+
+- A Google AI Studio API key (Gemini)
+- A Google AI Studio API key with access to Veo
+
+---
+
+# Clone the Repository
+
+```bash
+git clone https://github.com/<your-username>/virtual-tryon.git
+
+cd virtual-tryon
+```
+
+---
+
+# Backend Setup
+
+Move into the backend directory.
 
 ```bash
 cd backend
+```
+
+Create a virtual environment.
+
+### Windows
+
+```bash
 python -m venv .venv
-# Windows PowerShell:  .venv\Scripts\Activate.ps1
-# macOS/Linux:         source .venv/bin/activate
+.venv\Scripts\activate
+```
+
+### Linux / macOS
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the required packages.
+
+```bash
 pip install -r requirements.txt
+```
+
+Create a `.env` file by copying the example.
+
+```bash
 cp .env.example .env
+```
+
+Now start the backend server.
+
+```bash
 uvicorn app.main:app --reload
 ```
 
-API at `http://127.0.0.1:8000`; interactive docs at `/docs`.
+The backend will run at:
 
-### Frontend setup
+```
+http://127.0.0.1:8000
+```
+
+Swagger documentation:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# Frontend Setup
+
+Open another terminal.
 
 ```bash
 cd frontend
+```
+
+Install dependencies.
+
+```bash
 npm install
+```
+
+Run the development server.
+
+```bash
 npm run dev
 ```
 
-App at `http://localhost:5173` (proxies `/api` and `/health` to the backend).
+The frontend will start on
 
-## Environment variables
-
-All configuration is environment-driven (`backend/.env`); no secrets are
-hardcoded. See `backend/.env.example` for the full list.
-
-| Variable | Purpose | Default |
-|---|---|---|
-| `GEMINI_PROVIDER` | `fake` (offline) or `google` (real API) | `fake` |
-| `GEMINI_API_KEY` | Google AI Studio key (required for `google`) | — |
-| `GEMINI_MODEL` | Image-capable Gemini model id | `gemini-2.5-flash-image` |
-| `GEMINI_TEMPERATURE` / `GEMINI_TOP_P` / `GEMINI_CANDIDATE_COUNT` | Generation params | `0.2` / `0.95` / `1` |
-| `VIDEO_PROVIDER` | `fake` (offline) or `kling` (real API) | `fake` |
-| `KLING_API_KEY` | Kling API key (required for `kling`) | — |
-| `KLING_BASE_URL` / `KLING_MODEL` | Kling endpoint + model | `https://api-singapore.klingai.com` / `kling-v1` |
-| `KLING_POLL_INTERVAL_SECONDS` / `KLING_POLL_TIMEOUT_SECONDS` | Polling cadence/limit | `5` / `300` |
-| `STORAGE_DIR` | Root folder for uploads and generated output | `storage` |
-| `MAX_UPLOAD_SIZE_BYTES` / `MAX_IMAGE_DIMENSION` / `MAX_IMAGE_PIXELS` | Upload validation limits | — |
-| `PREPROCESS_MAX_DIMENSION` | Max side sent to the model | `1536` |
-
-### Gemini setup
-
-1. Create an API key in Google AI Studio.
-2. Set `GEMINI_PROVIDER=google` and `GEMINI_API_KEY=<key>` in `backend/.env`.
-3. Keep `GEMINI_MODEL=gemini-2.5-flash-image` (an AI-Studio-compatible image
-   model). Note: image generation is a **billed** feature with no free tier.
-
-### Kling setup
-
-1. Obtain a Kling API key.
-2. Set `VIDEO_PROVIDER=kling` and `KLING_API_KEY=<key>` in `backend/.env`.
-3. The provider authenticates with `Authorization: Bearer <KLING_API_KEY>`,
-   submits the try-on image to the image-to-video endpoint, polls until the task
-   completes, then stores the resulting MP4.
-
-With `GEMINI_PROVIDER=fake` / `VIDEO_PROVIDER=fake` (defaults), the full flow runs
-offline and deterministically — ideal for development and the test suite.
-
-## Running locally
-
-Run the backend and frontend in two terminals (see setup above), then open the
-Vite URL. The header shows a live "Backend: online" badge when connectivity is
-working.
-
-### Tests
-
-```bash
-cd backend
-pip install -r requirements-dev.txt
-python -m pytest -q
+```
+http://localhost:5173
 ```
 
-Tests override the Gemini and Video providers with fakes, so they never call
-external APIs and are fully deterministic.
+---
 
-## API endpoints
+# Environment Variables
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/health` | Liveness/readiness (unversioned) |
-| POST | `/api/v1/uploads` | Validate + store an image (`file`, optional `kind`) → `201` |
-| POST | `/api/v1/try-on` | Generate try-on image (`person_upload_id`, `jewellery_upload_id`, `category`) → `201` |
-| POST | `/api/v1/videos` | Generate video from a result (`image_result_id`) → `201` |
-| GET | `/api/v1/results/{result_id}` | Stream the generated image |
-| GET | `/api/v1/videos/{video_id}/content` | Stream the generated video |
+The application is configured entirely through environment variables.
 
-Success envelope:
+Below are the most important ones.
 
-```json
-{ "data": { "...": "..." }, "meta": { "request_id": "req_..." } }
+| Variable | Description |
+|------------|------------|
+| GEMINI_PROVIDER | AI provider for image generation |
+| GEMINI_API_KEY | Google AI Studio API key |
+| GEMINI_MODEL | Gemini image generation model |
+| VIDEO_PROVIDER | Video generation provider |
+| VEO_MODEL | Google Veo model |
+| VEO_PROMPT | Default animation prompt |
+| STORAGE_DIR | Local storage directory |
+
+The repository already contains a `.env.example` file with all available options.
+
+---
+
+# APIs Used
+
+## 1. Google Gemini
+
+Used for generating the jewellery try-on image.
+
+Model used:
+
+```
+models/nano-banana-pro-preview
 ```
 
-## Error handling
+API Key:
 
-Every response carries an `X-Request-ID` header. Errors use one consistent shape:
+Google AI Studio
 
-```json
-{
-  "error": {
-    "code": "UNSUPPORTED_MEDIA_TYPE",
-    "message": "Unsupported file type. Allowed types: image/jpeg, image/png, image/webp.",
-    "request_id": "req_...",
-    "details": []
-  }
-}
+https://aistudio.google.com/
+
+Generate an API key and add it to:
+
+```
+backend/.env
 ```
 
-Stable codes map to correct HTTP status codes: `400` (bad request / empty),
-`404` (not found), `413` (too large / oversized), `415` (unsupported type),
-`422` (corrupt / validation / safety refusal), `429` (rate limited), `502/504`
-(upstream errors/timeouts). Video generation is isolated: if Kling fails, the
-image generation still succeeds and remains downloadable — the failure surfaces
-as a friendly message and never crashes the app.
+Example:
 
-## Screenshots
+```env
+GEMINI_API_KEY=YOUR_API_KEY
+```
 
-_Add screenshots here._
+---
 
-- `docs/screenshot-home.png` — upload + catalogue screen
-- `docs/screenshot-result.png` — generated image + video result screen
-- `docs/demo.mp4` — short end-to-end demo recording
+## 2. Google Veo
 
-## Known limitations
+Used for converting the generated image into a short animation.
 
-- **Kling account balance:** the Kling integration is complete and working
-  end-to-end, but the current account returns
-  `{"code":1102,"message":"Account balance not enough"}`, so live video
-  generation cannot be demonstrated until the account is funded. The `fake`
-  video provider exercises the full pipeline offline in the meantime.
-- **Gemini billing:** image generation has no free tier; a depleted-credit key
-  returns `429 RESOURCE_EXHAUSTED`. Use a funded key or the `fake` provider.
-- **Synchronous video generation:** the `/videos` request blocks while the
-  backend polls Kling. This is intentional for a demo; a production system would
-  model it as an async job with client polling/webhooks.
-- **Local storage only:** artifacts live on the local filesystem behind
-  `StorageProvider`, swappable for cloud storage without touching callers.
-- **No authentication:** the API is open, appropriate for a local demo.
+Model used:
 
-## Future improvements
+```
+models/veo-3.1-fast-generate-preview
+```
 
-- Async job model for video generation (task id + polling/SSE).
-- Cloud storage provider (S3/GCS) implementing `StorageProvider`.
-- Result-retrieval metadata endpoints and persistence (currently file-backed).
-- Authentication, rate limiting, and per-user history.
-- Frontend tests and CI (lint + type-check + pytest).
+The project reuses the same Google AI Studio API key.
+
+No additional authentication is required.
+
+---
+
+# Running the Application
+
+Start both backend and frontend.
+
+1. Upload a face image or hand image.
+2. Choose a jewellery item.
+3. Click **Generate Try-On**.
+4. Wait for Gemini to generate the result.
+5. Click **Generate Video**.
+6. Wait for Veo to finish processing.
+7. View or download the final image and video.
+
+---
+
+# API Endpoints
+
+## Upload Image
+
+```
+POST /api/v1/uploads
+```
+
+Uploads and validates a user or jewellery image.
+
+---
+
+## Generate Try-On
+
+```
+POST /api/v1/try-on
+```
+
+Uses Gemini to generate a realistic jewellery try-on.
+
+---
+
+## Generate Video
+
+```
+POST /api/v1/videos
+```
+
+Uses Google Veo to animate the generated image.
+
+---
+
+## Download Image
+
+```
+GET /api/v1/results/{result_id}
+```
+
+Returns the generated image.
+
+---
+
+## Download Video
+
+```
+GET /api/v1/videos/{video_id}/content
+```
+
+Returns the generated MP4.
+
+---
+
+# Gemini Prompt Design
+
+One of the main goals while designing the prompt was to make the generated jewellery look natural without changing the user's identity.
+The prompt first determines the jewellery category and automatically chooses the correct user image. Face images are used for necklaces and earrings, while hand images are used for rings, bracelets, and watches.
+Special attention was given to preserving the user's facial features, hand shape, skin tone, lighting, and background. The prompt also instructs Gemini to keep the jewellery's original colour, material, and design unchanged so that the output closely matches the catalogue image.
+Instead of using one generic prompt, the application uses category-specific instructions to improve placement and realism. This approach produced more consistent and visually accurate results during testing.
+
+---
+
+# Screenshots
+
+
+
+## Home Page
+
+
+
+---
+
+## Jewellery Catalogue
+
+
+
+---
+
+## Generated Try-On
+
+
+
+---
+
+## Generated Video
+
+
+
+---
+
+## Demo Video
+
+
+---
+
+# Limitations
+
+- Image quality depends on the quality of the uploaded image.
+- Google Gemini preview models may occasionally return temporary `503 UNAVAILABLE` errors during periods of high demand. Retrying the request usually resolves the issue.
+- Video generation takes longer than image generation 
+- All generated files are stored locally. 
+
+---
+
+# Future Improvements
+
+Some improvements that could be added in future versions include:
+
+- Clothing try-on support (Part 2 of the assignment)
+- User authentication
+
+---
+
+# Author
+
+**Aditya Mengawade**
+
+Backend Intern Assignment
+
+Sixth Dimension Labs
