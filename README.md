@@ -7,6 +7,7 @@ This project was developed as part of the **Backend Intern Assignment** for **Si
 ---
 
 ## Demo
+https://drive.google.com/file/d/15tgkSH_kAsLlS5ltgVH4oQ0B69GT5qw6/view?usp=drivesdk
 
 
 # Project Overview
@@ -508,21 +509,23 @@ Instead of using one generic prompt, the application uses category-specific inst
 # Screenshots
 
 
-
 ## Home Page
 
+<img width="959" height="538" alt="Screenshot 2026-07-06 180546" src="https://github.com/user-attachments/assets/e9cab0f1-a1b3-4abf-8d4c-1c708e32e2e1" />
 
 
 ---
 
 ## Jewellery Catalogue
 
+<img width="959" height="539" alt="Screenshot 2026-07-06 180754" src="https://github.com/user-attachments/assets/963450de-94c4-4dd2-b054-e8c37e973c11" />
 
 
 ---
 
 ## Generated Try-On
 
+<img width="526" height="410" alt="Screenshot 2026-07-06 031638" src="https://github.com/user-attachments/assets/a4f5364a-f83f-4488-a9e7-e846a3feae67" />
 
 
 ---
@@ -531,21 +534,10 @@ Instead of using one generic prompt, the application uses category-specific inst
 
 
 
----
-
-## Demo Video
+https://github.com/user-attachments/assets/ef42a1a1-1c86-4dbe-b862-3bb747438a81
 
 
----
 
-# Limitations
-
-- Image quality depends on the quality of the uploaded image.
-- Google Gemini preview models may occasionally return temporary `503 UNAVAILABLE` errors during periods of high demand. Retrying the request usually resolves the issue.
-- Video generation takes longer than image generation 
-- All generated files are stored locally. 
-
----
 
 # Future Improvements
 
