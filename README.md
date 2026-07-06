@@ -527,6 +527,11 @@ Instead of using one generic prompt, the application uses category-specific inst
 
 <img width="526" height="410" alt="Screenshot 2026-07-06 031638" src="https://github.com/user-attachments/assets/a4f5364a-f83f-4488-a9e7-e846a3feae67" />
 
+<img width="959" height="539" alt="Screenshot 2026-07-06 164710" src="https://github.com/user-attachments/assets/fcb8b38a-4831-44c9-9db4-cecbcb6be4af" />
+
+<img width="1024" height="1024" alt="019f36e38c17741bb23a3f900652a89b" src="https://github.com/user-attachments/assets/5b9875e8-ef10-47a8-acf5-d7255aa99830" />
+
+
 
 ---
 
@@ -535,6 +540,11 @@ Instead of using one generic prompt, the application uses category-specific inst
 
 
 https://github.com/user-attachments/assets/ef42a1a1-1c86-4dbe-b862-3bb747438a81
+
+
+
+
+https://github.com/user-attachments/assets/02be3018-f0a0-473d-b890-e161339b1804
 
 
 
