@@ -272,7 +272,7 @@ You will also need:
 # Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/virtual-tryon.git
+git clone  https://github.com/adityaa1912/virtual-tryon
 
 cd virtual-tryon
 ```
